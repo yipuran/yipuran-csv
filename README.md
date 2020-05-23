@@ -32,6 +32,6 @@ repositories {
 }
 
 dependencied {
-    compile 'org.yipuran.core:yipuran-csv:1.0'
+    compile 'org.yipuran.csv:yipuran-csv:1.0'
 }
 ```
