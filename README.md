@@ -28,7 +28,7 @@ RFC4180準拠、ラムダ式、ストリーム実行の為のＣＳＶ読込み�
 ```
 repositories {
     mavebCentral()
-    maven { url 'https://github.com/yipuran/yipuran-csv/mvn-repo'  }
+    maven { url 'https://raw.github.com/yipuran/yipuran-csv/mvn-repo'  }
 }
 
 dependencied {
