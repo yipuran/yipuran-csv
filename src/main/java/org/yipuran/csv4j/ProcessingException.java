@@ -41,6 +41,9 @@ public class ProcessingException extends Exception
         this.linenumber = linenumber;
     }
 
+    public int getLinenumber() {
+   	 return linenumber;
+    }
 
     /** {@inheritDoc} */
     @Override

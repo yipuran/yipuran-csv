@@ -23,6 +23,7 @@ package org.yipuran.csv4j;
  */
 public class ParseException extends RuntimeException
 {
+	private Integer columno;
     /**
      * Constructor.
      * @param message exception message
@@ -30,6 +31,14 @@ public class ParseException extends RuntimeException
     public ParseException( String message )
     {
         super( message );
+    }
+    public ParseException( String message, int columno )
+    {
+        super( message );
+        this.columno = columno;
+    }
+    public Integer getColumNo() {
+   	 return columno;
     }
 
 

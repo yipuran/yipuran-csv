@@ -114,7 +114,7 @@ public class CSVParser
                 {
                     throw new ParseException( "unquoted " +
                             ( ch == '\n' ? "newline" : "carriage return" ) +
-                            " found at position #" + (ii+1) );
+                            " found at position #" + (ii+1) , tokens.size() + 1);
                 }
                 break;
 
@@ -189,7 +189,7 @@ public class CSVParser
         }
 
         if ( insideDoubleQuote )
-            throw new ParseException( "terminating double quote not found" );
+            throw new ParseException( "terminating double quote not found" , tokens.size() + 1);
 
         // add the last token
         tokens.add( tokenBuf.toString() );

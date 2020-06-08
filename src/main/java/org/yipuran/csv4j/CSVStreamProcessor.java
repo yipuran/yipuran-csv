@@ -19,6 +19,7 @@ package org.yipuran.csv4j;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.List;
 
 
@@ -125,7 +126,7 @@ public class CSVStreamProcessor
     public int processStream( final InputStreamReader is, final CSVLineProcessor processor )
             throws IOException, ProcessingException, ParseException
     {
-        final CSVReader reader = new CSVReader( new BufferedReader( is ),
+        final CSVReader reader = new CSVReader( new BufferedReader( is ), Charset.forName(is.getEncoding()),
                                                 this.comment );
 
         try

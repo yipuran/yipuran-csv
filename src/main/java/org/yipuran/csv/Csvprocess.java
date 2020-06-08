@@ -2,7 +2,9 @@ package org.yipuran.csv;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,10 +20,11 @@ import org.yipuran.csv4j.ProcessingException;
 /**
  * CSV読込みProcessor.
  * ヘッダ有り読込みとヘッダ無し読込みを提供する。
+ * InputStreamReader か、InputStream と文字セットを指定して読込みを実行する。
  * <PRE>
  * ヘッダ有り読込み、(for Windows SJIS CSV)
  * Csvprocess process = new Csvprocess();
- * process.read(new InputStreamReader(in, "MS932")
+ * process.read(new InputStreamReader(in, Charset.forName("MS932"))
  * , h->{
  *    // ヘッダ１列目
  *    String value = h.get(0);
@@ -34,7 +37,7 @@ import org.yipuran.csv4j.ProcessingException;
  *
  * ヘッダ無し読込み、(for Windows SJIS CSV)
  * Csvprocess process = new Csvprocess();
- * process.readNoheader(new InputStreamReader(in, "MS932"), (i, p)->{
+ * process.readNoheader(new InputStreamReader(in, Charset.forName("MS932")), (i, p)->{
  *      // i = 行index（０始まり）
  *      // p = １行の Line&lt;String&gt;
  *      p.stream().forEach(e->{
@@ -44,7 +47,7 @@ import org.yipuran.csv4j.ProcessingException;
  *
  * ヘッダ有りＣＳＶ読込み実行（Map形式読込み）.
  * Csvprocess process = new Csvprocess();
- * process.readNoheader(new InputStreamReader(in, "MS932"), (i, map)->{
+ * process.read(new InputStreamReader(in, Charset.forName("MS932")), (i, map)->{
  *      // i = 行index（１始まり）
  *      // map : key=ヘッダの値、value=対応するコンテンツ行の値
  *      map.entrySet().stream().forEach(e->{
@@ -52,6 +55,19 @@ import org.yipuran.csv4j.ProcessingException;
  *          String value = e.getValue();
  *      });
  * });
+ *
+ * // InputStream 使用時、
+ * Csvprocess process = new Csvprocess();
+ * process.read(inputStream, Charset.forName("MS932")
+ * , h->{
+ *    // ヘッダ１列目
+ *    String value = h.get(0);
+ * }, (n, p)->{
+ *     // n = CSV行カウント（１始まり）、p = CSV １行の Line&lt;String&gt;
+ *     // １列目
+ *     String value =  p.get(0);
+ * });
+ *
  * </PRE>
  */
 public class Csvprocess extends CSVStreamProcessor{
@@ -81,13 +97,13 @@ public class Csvprocess extends CSVStreamProcessor{
 	 */
 	public void read(InputStreamReader inReader, Consumer<List<String>> header, BiConsumer<Integer, List<String>> processor)
 	throws IOException, ProcessingException{
-		CSVReader reader = new CSVReader(new BufferedReader(inReader), getComment(), blankIsNull);
+		CSVReader reader = new CSVReader(new BufferedReader(inReader), Charset.forName(inReader.getEncoding()), getComment(), blankIsNull);
 		try{
 			int lineCount = 0;
 			while(true){
-				List<String> fields = reader.readLine();
-				if (fields.size()==0) break;
 				try{
+					List<String> fields = reader.readLine();
+					if (fields.size()==0) break;
 					if (isHasHeader() && lineCount==0){
 						String rep = fields.get(0);
 						if (BOMfunction.match(rep)) {
@@ -116,20 +132,20 @@ public class Csvprocess extends CSVStreamProcessor{
 	 * @throws ParseException
 	 */
 	public void readNoheader(InputStreamReader inReader, BiConsumer<Integer, List<String>> processor) throws IOException, ProcessingException, ParseException{
-		CSVReader reader = new CSVReader(new BufferedReader(inReader), getComment(), blankIsNull);
+		CSVReader reader = new CSVReader(new BufferedReader(inReader), Charset.forName(inReader.getEncoding()), getComment(), blankIsNull);
 		try{
 			int lineIndex = 0;
 			while(true){
-				List<String> fields = reader.readLine();
-				if (fields.size()==0) break;
-				if (lineIndex==0){
-					String rep = fields.get(0);
-					if (BOMfunction.match(rep)) {
-						fields.remove(0);
-						fields.add(0, BOMfunction.chop(rep));
-					}
-				}
 				try{
+					List<String> fields = reader.readLine();
+					if (fields.size()==0) break;
+					if (lineIndex==0){
+						String rep = fields.get(0);
+						if (BOMfunction.match(rep)) {
+							fields.remove(0);
+							fields.add(0, BOMfunction.chop(rep));
+						}
+					}
 					processor.accept(lineIndex, fields);
 				}catch(Exception e){
 					throw new ProcessingException(e, reader.getLineNumber());
@@ -152,14 +168,14 @@ public class Csvprocess extends CSVStreamProcessor{
 	 * @throws ProcessingException
 	 */
 	public void read(InputStreamReader inReader, BiConsumer<Integer, Map<String, String>> processor) throws IOException, ProcessingException{
-		CSVReader reader = new CSVReader(new BufferedReader(inReader), getComment(), blankIsNull);
+		CSVReader reader = new CSVReader(new BufferedReader(inReader), Charset.forName(inReader.getEncoding()), getComment(), blankIsNull);
 		try{
 			Map<Integer, String> headerMap = new HashMap<>();
 			int lineCount = 0;
 			while(true){
-				List<String> fields = reader.readLine();
-				if (fields.size()==0) break;
 				try{
+					List<String> fields = reader.readLine();
+					if (fields.size()==0) break;
 					if (isHasHeader() && lineCount==0){
 						String rep = fields.get(0);
 						if (BOMfunction.match(rep)) {
@@ -185,5 +201,47 @@ public class Csvprocess extends CSVStreamProcessor{
 		}finally{
 			reader.close();
 		}
+	}
+
+	/**
+	 * ヘッダ有りＣＳＶ読込み実行.
+	 * @param in InputStream
+	 * @param charset 文字コード
+	 * @param header ヘッダ行 Consumer
+	 * @param processor コンテンツ行BiConsumer、CSV行読込みカウント（１始まり）とCSV文字列のList
+	 * @throws IOException
+	 * @throws ProcessingException
+	 * @since 1.1
+	 */
+	public void read(InputStream in, Charset charset, Consumer<List<String>> header, BiConsumer<Integer, List<String>> processor) throws IOException, ProcessingException {
+		read(new InputStreamReader(in, charset), header, processor);
+	}
+	/**
+	 * ヘッダ無しＣＳＶ読込み実行.
+	 * @param in InputStream
+	 * @param charset 文字コード
+	 * @param processor BiConsumer 行のindexとCSV文字列のList
+	 * @throws IOException
+	 * @throws ProcessingException
+	 * @throws ParseException
+	 * @since 1.1
+	 */
+	public void readNoheader(InputStream in, Charset charset, BiConsumer<Integer, List<String>> processor) throws IOException, ProcessingException {
+		readNoheader(new InputStreamReader(in, charset), processor);
+	}
+	/**
+	 * ヘッダ有りＣＳＶ読込み実行（Map形式読込み）.
+	 * <PRE>
+	 * ヘッダ行列をキーとして読込み結果をMapで実行
+	 * </PRE>
+	 * @param in InputStream
+	 * @param charset 文字コード
+	 * @param processor コンテンツ行BiConsumer、CSV行読込みカウント（１始まり）とヘッダのキーに対するコンテンツ行の値のMap
+	 * @throws IOException
+	 * @throws ProcessingException
+	 * @since 1.1
+	 */
+	public void read(InputStream in, Charset charset, BiConsumer<Integer, Map<String, String>> processor) throws IOException, ProcessingException {
+		read(new InputStreamReader(in, charset), processor);
 	}
 }
