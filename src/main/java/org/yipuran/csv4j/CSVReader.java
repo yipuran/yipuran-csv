@@ -19,6 +19,8 @@ package org.yipuran.csv4j;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,14 +58,15 @@ public class CSVReader
     private int bufLen = 0;
     private int bufPos = 0;
     private States state = States.Appending;
+    private Charset charset;
 
     /**
      * Constructs a CSV reader with the default options.
      * @param reader input to read from.
      */
-    public CSVReader( final Reader reader )
+    public CSVReader( final Reader reader, Charset charset)
     {
-        this( reader, CSVConstants.DEFAULT_COMMENT );
+        this( reader, charset, CSVConstants.DEFAULT_COMMENT );
     }
 
     /**
@@ -73,13 +76,13 @@ public class CSVReader
      * be able to track the line numbers correctly (newlines can be escaped in a CSV file).
      * @param comment character indicating line is a comment and should be ignored
      */
-    public CSVReader( final Reader reader, final char comment )
+    public CSVReader( final Reader reader, Charset charset, final char comment )
     {
-        this( reader, CSVConstants.DEFAULT_DELIMITER, comment );
+        this( reader, charset, CSVConstants.DEFAULT_DELIMITER, comment );
     }
-    public CSVReader( final Reader reader, final char comment , boolean blankIsNull)
+    public CSVReader( final Reader reader, Charset charset, final char comment , boolean blankIsNull)
     {
-        this( reader, CSVConstants.DEFAULT_DELIMITER, comment , blankIsNull);
+        this( reader, charset, CSVConstants.DEFAULT_DELIMITER, comment , blankIsNull);
     }
 
     /**
@@ -90,21 +93,23 @@ public class CSVReader
      * @param comment character indicating line is a comment and should be ignored
      * @param delimiter field delimiter character
      */
-    public CSVReader( final Reader reader, final char delimiter, final char comment )
+    public CSVReader( final Reader reader, Charset charset, final char delimiter, final char comment )
     {
         this.reader = reader;
         this.parser = new CSVParser( delimiter, true );
         this.comment = comment + "";
         this.commentChar = comment;
+        this.charset = charset;
     }
 
-    public CSVReader( final Reader reader, final char delimiter, final char comment , boolean blankIsNull)
+    public CSVReader( final Reader reader, Charset charset, final char delimiter, final char comment , boolean blankIsNull)
     {
         this.reader = reader;
         // "" → null フラグ: true なら解析結果 String を null にする
         this.parser = blankIsNull ? new CSVNullableParser( delimiter, true ) : new CSVParser( delimiter, true );
         this.comment = comment + "";
         this.commentChar = comment;
+        this.charset = charset;
     }
 
 
@@ -128,9 +133,11 @@ public class CSVReader
      */
     public List<String> readLine() throws IOException, ParseException
     {
+        boolean flg = this.charset.equals(StandardCharsets.UTF_8);
         while ( true )
         {
-            final String line = readCSVLine();
+            final String line = readCSVLine(flg);
+            flg = false;
             if ( line == null )
                 return Collections.emptyList();
 
@@ -163,7 +170,7 @@ public class CSVReader
      * @return CSV line without line terminator characters; null returned if EOF reached
      * @throws IOException if an IO error occurs
      */
-    private String readCSVLine() throws IOException
+    private String readCSVLine(boolean top) throws IOException
     {
         if ( state == States.EOF )
             return null;
@@ -176,6 +183,15 @@ public class CSVReader
             {
                 this.bufPos = 0;
                 this.bufLen = this.reader.read( buf );
+                if (top) {
+                   // BIG_ENDIAN or LITTLE_ENDIAN
+                   if (buf[0]==0xfeff || buf[0]==0xfffe) {
+                      for(int k=1;k < this.bufLen;k++) {
+                         buf[k-1] = buf[k];
+                      }
+                      this.bufLen--;
+                   }
+                }
                 if ( this.bufLen < 0 )
                 {
                     state = States.EOF;

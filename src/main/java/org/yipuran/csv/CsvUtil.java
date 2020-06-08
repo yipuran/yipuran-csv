@@ -109,6 +109,9 @@ public final class CsvUtil{
 			int r = in.read(b);
 			if (r==3) {
 				if (b[0] == -17 && b[1] == -69 && b[2] == -65) rtn = true;
+			}else if(r >= 2) {
+				if (b[0] == -1 && b[1] == -2) rtn = true;
+				if (b[0] == -2 && b[1] == -1) rtn = true;
 			}
 		}catch(IOException e){
 			throw new RuntimeException(e.getMessage());
@@ -131,6 +134,9 @@ public final class CsvUtil{
 			int r = in.read(b);
 			if (r==3) {
 				if (b[0] == -17 && b[1] == -69 && b[2] == -65) rtn = true;
+			}else if(r >= 2) {
+				if (b[0] == -1 && b[1] == -2) rtn = true;
+				if (b[0] == -2 && b[1] == -1) rtn = true;
 			}
 			in.reset();
 		}catch(IOException e){
