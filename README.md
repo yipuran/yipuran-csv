@@ -18,7 +18,7 @@ RFC4180準拠、ラムダ式、ストリーム実行の為のＣＳＶ読込み�
     <dependency>
         <groupId>org.yipuran.csv</groupId>
         <artifactId>yipuran-csv</artifactId>
-        <version>1.0</version>
+        <version>1.1</version>
     </dependency>
 </dependencies>
 
