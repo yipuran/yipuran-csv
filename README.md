@@ -27,7 +27,7 @@ RFC4180準拠、ラムダ式、ストリーム実行の為のＣＳＶ読込み�
 ## Setup gradle
 ```
 repositories {
-    mavebCentral()
+    mavenCentral()
     maven { url 'https://raw.github.com/yipuran/yipuran-csv/mvn-repo'  }
 }
 
