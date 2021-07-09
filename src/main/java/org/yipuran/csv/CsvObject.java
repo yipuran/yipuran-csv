@@ -58,14 +58,11 @@ public class CsvObject<T> extends CSVStreamProcessor{
 		cls = (Class<T>)t.getClass().getComponentType();
 	}
 	/**
-	 * ブランク→null指定コンストラクタ.
+	 * ブランク→null指定.
 	 * @param true=ブランク、",," は、null として読み込む。
-	 * @param t 可変長引数、指定しても使用はされない
 	 */
-	@SuppressWarnings("unchecked")
-	public CsvObject(boolean blankIsNull, T...t) {
+	public void setBlanknull(boolean blankIsNull) {
 		this.blankIsNull = blankIsNull;
-		cls = (Class<T>)t.getClass().getComponentType();
 	}
 	/**
 	 * 日付文字列を LocalDate に変換する場合のフォーマット指定.

@@ -61,7 +61,8 @@ assertEquals("(i=11,ii=null,l=21,ll=null,d=3.14,dd=30.14,f=0.02,ff=null,t=7,tt=n
 		sb.append("11,,21,,3.14,30.14,0.02,,7,,1,0,い,2021/07/08,2021/07/06 16:21:06,05:08");
 		String data = sb.toString();
 
-		CsvObject<Foo> co = new CsvObject<>(true);
+		CsvObject<Foo> co = new CsvObject<>();
+		co.setBlanknull(true);
 		co.setLocaldateFormat(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 		co.setLocaldateTimeFormat(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
 		co.setLocalTimeFormat(DateTimeFormatter.ofPattern("HH:mm"));
